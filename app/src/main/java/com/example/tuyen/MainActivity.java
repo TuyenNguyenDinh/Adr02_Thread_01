@@ -22,7 +22,8 @@ import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
     Handler mHandler;
-    int a = 0;
+    int a[];
+    final int SIZE = 100;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,122 +35,85 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 super.handleMessage(msg);
-                switch (msg.getData().getString("COMMAND")) {
-//                    case "MODULE_5":
-//                        Log.v("Chia het cho 2", msg.getData().getInt("A") + "");
-//                        break;
-                    case "MODULE_6":
-                        Log.v("có bao nhiêu số chẵn", msg.getData().getInt("B") + "");
+                switch (msg.getData().getString("COMMAND")){
+                    case "THREAD_CHAN_FINISH":
+                        Log.d("So so chan", msg.getData().getInt("SO_SO_CHAN") + "");
                         break;
-//                    case "MODULE_7":
-//                        Log.v("Không chia hết cho 2", msg.getData().getInt("C") + "");
-//                        break;
-                    case "MODULE_8":
-                        Log.v("có bao nhiêu số lẻ", msg.getData().getInt("D") + "");
+                    case "THREAD_LE_FINISH":
+                        Log.d("So so le", msg.getData().getInt("SO_SO_LE") + "");
                         break;
                 }
             }
         };
 
-
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                chan();
+                arrayGeneration(SIZE);
             }
         });
     }
 
-    public  void soNguyen(){
-        int n = 100, number;
-        Random rd = new Random();
-        ArrayList<Integer> arrayList = new ArrayList<>(n);
-
-        for (int i = 0; i <= n; i++) {
-            number = rd.nextInt(100);
-            arrayList.add(number);
-
+    void arrayGeneration(int size){
+        a = new int[size];
+        Random random = new Random();
+        for(int i=0; i < size; i++){
+            a[i] = random.nextInt(100);
         }
-        Log.d("array", String.valueOf(arrayList));
+
+        threadChan();
+        threadLe();
     }
 
-    void chan(){
-        Thread t = new Thread(new Runnable() {
+    void threadChan(){
+        Thread thread = new Thread(){
             @Override
             public void run() {
-                int n = 100, number, demchan =0, demle = 0;
-                Random rd = new Random();
-                ArrayList<Integer> arrayList = new ArrayList<>(n);
-                for (int i=0; i <= n; i++){
-                    number = rd.nextInt(100);
-                    arrayList.add(number);
-                    if(number % 2 == 0){
-                        demchan++;
-//                        Message msg = mHandler.obtainMessage();
-//                        Bundle b = new Bundle();
-//                        b.putString("COMMAND", "MODULE_5");
-//                        b.putInt("A", number);
-//                        msg.setData(b);
-//                        mHandler.sendMessage(msg);
-                    }
-                    if (number % 2 != 0){
-                        demle++;
+                int count = 0;
+                for(int i=0;i < SIZE;i++){
+                    if(a[i] % 2 == 0){
+                        count++;
                     }
                 }
-                Log.d("array", String.valueOf(arrayList));
+
+                //Send value to main thread
                 Message msg = mHandler.obtainMessage();
-                Bundle b = new Bundle();
-                b.putString("COMMAND", "MODULE_6");
-                b.putInt("B", demchan);
-                msg.setData(b);
+                Bundle bundle = new Bundle();
+                bundle.putString("COMMAND", "THREAD_CHAN_FINISH");
+                bundle.putInt("SO_SO_CHAN", count);
+                msg.setData(bundle);
                 mHandler.sendMessage(msg);
-
-                Message msg1 = mHandler.obtainMessage();
-                Bundle b1 = new Bundle();
-                b1.putString("COMMAND", "MODULE_8");
-                b1.putInt("D", demle);
-                msg1.setData(b1);
-                mHandler.sendMessage(msg1);
             }
-        });
-        t.start();
-//        soNguyen();
+        };
 
+        thread.start();
     }
 
-//    void le(){
-//        Thread t = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                int n = 100, number, dem =0;
-//                Random rd = new Random();
-//                ArrayList<Integer> arrayList = new ArrayList<>(n);
-//                for (int i=0; i <= n; i++){
-//                    number = rd.nextInt(100);
-//                    arrayList.add(number);
-//                    if(number % 2 != 0){
-//                        dem++;
-////                        Message msg = mHandler.obtainMessage();
-////                        Bundle b = new Bundle();
-////                        b.putString("COMMAND", "MODULE_7");
-////                        b.putInt("C", number);
-////                        msg.setData(b);
-////                        mHandler.sendMessage(msg);
-//                    }
-//                }
-////                Message msg = mHandler.obtainMessage();
-////                Bundle b = new Bundle();
-////                b.putString("COMMAND", "MODULE_8");
-////                b.putInt("D", dem);
-////                msg.setData(b);
-////                mHandler.sendMessage(msg);
-//            }
-//        });
-//        t.start();
-//    }
+    void threadLe(){
+        Thread thread = new Thread(){
+            @Override
+            public void run() {
+                int count = 0;
+                for(int i=0;i < SIZE;i++){
+                    if(a[i] % 2 == 1){
+                        count++;
+                    }
+                }
 
+                //Send value to main thread
+                Message msg = mHandler.obtainMessage();
+                Bundle bundle = new Bundle();
+                bundle.putString("COMMAND", "THREAD_LE_FINISH");
+                bundle.putInt("SO_SO_LE", count);
+                msg.setData(bundle);
 
+                mHandler.sendMessage(msg);
+            }
+        };
+
+        thread.start();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -179,4 +143,3 @@ public class MainActivity extends AppCompatActivity {
 //   tao 2 thread worker:
 //      - dem mang a co bao nhieu so chan (thread chan)
 //      - dem mang a co bao nhieu so le (thread le)
-//   tao thread tổng, tính tổng các số chia hết cho 5 của mảng a được gửi sang từ 2 thread le và chan
